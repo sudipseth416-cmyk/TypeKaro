@@ -1,4 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+
+const playWinSound = () => {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.4);
+    osc.start(ctx.currentTime + i * 0.15);
+    osc.stop(ctx.currentTime + i * 0.15 + 0.4);
+  });
+};
+
 
 export default function ResultScreen({ 
   wpm, 
@@ -12,8 +30,75 @@ export default function ResultScreen({
   onSwitchMode,
   username
 }) {
+  useEffect(() => {
+    // Play the win sound
+    try {
+      playWinSound();
+    } catch (e) {
+      console.error('Audio play failed', e);
+    }
+
+    // Trigger Confetti
+    if (window.confetti) {
+      window.confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#e2b714', '#ffffff', '#f0c420', '#ffdd57', '#fff']
+      });
+      setTimeout(() => {
+        window.confetti({ angle: 60, spread: 55, origin: { x: 0 }, particleCount: 80, colors: ['#e2b714', '#ffffff'] });
+      }, 500);
+      setTimeout(() => {
+        window.confetti({ angle: 120, spread: 55, origin: { x: 1 }, particleCount: 80, colors: ['#e2b714', '#ffffff'] });
+      }, 1000);
+    }
+  }, []);
+
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto bg-gradient-to-b from-[#1a1a1a] to-[#0f0f0f] rounded-3xl shadow-[0_0_50px_rgba(226,183,20,0.15)] border border-accent/20 p-12 animate-fade-in">
+    <>
+    <style>
+      {`
+        @keyframes slideUpCard {
+          from { transform: translateY(40px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes scaleFadeIn {
+          from { transform: scale(0.5); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes popBounce {
+          0% { transform: scale(0.8) translateY(10px); opacity: 0; }
+          60% { transform: scale(1.1) translateY(-5px); opacity: 1; }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+      `}
+    </style>
+    <div 
+      className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto bg-gradient-to-b from-[#1a1a1a] to-[#0f0f0f] rounded-3xl shadow-[0_0_50px_rgba(226,183,20,0.15)] border border-accent/20 p-12"
+      style={{ animation: 'slideUpCard 0.5s ease-out forwards' }}
+    >
+      <div 
+        className="flex space-x-6 mb-6 text-5xl"
+        style={{ animation: 'scaleFadeIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both' }}
+      >
+        <span>🎉</span>
+        <span>🏆</span>
+        <span>🎊</span>
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-3 mb-6 min-h-[40px]">
+        {wpm > 80 ? (
+          <span className="px-4 py-1.5 bg-yellow-500/20 text-yellow-400 font-bold rounded-full border border-yellow-500/50" style={{ animation: 'popBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both' }}>⚡ Speed Demon!</span>
+        ) : wpm > 60 ? (
+          <span className="px-4 py-1.5 bg-yellow-500/20 text-yellow-400 font-bold rounded-full border border-yellow-500/50" style={{ animation: 'popBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both' }}>🔥 Fast Typer!</span>
+        ) : wpm < 30 ? (
+          <span className="px-4 py-1.5 bg-gray-500/20 text-gray-400 font-bold rounded-full border border-gray-500/50" style={{ animation: 'popBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both' }}>💪 Keep Practicing!</span>
+        ) : null}
+        {accuracy === 100 && (
+          <span className="px-4 py-1.5 bg-green-500/20 text-green-400 font-bold rounded-full border border-green-500/50" style={{ animation: 'popBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s both' }}>💯 Perfect Accuracy!</span>
+        )}
+      </div>
       <div className="flex items-center space-x-4 mb-10">
         <span className="text-4xl">🏆</span>
         <h2 className="text-3xl sm:text-4xl font-black text-accent tracking-[0.2em] uppercase drop-shadow-[0_0_10px_rgba(226,183,20,0.5)]">
@@ -68,5 +153,6 @@ export default function ResultScreen({
         </button>
       </div>
     </div>
+    </>
   );
 }

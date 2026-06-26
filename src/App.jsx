@@ -124,6 +124,7 @@ function App() {
   useEffect(() => {
     if (status === 'finished' && !hasSavedResult.current) {
       hasSavedResult.current = true;
+
       const duration = mode === 'word' ? timeOption : timeOption - timeLeft;
       const result = {
         wpm,
@@ -330,7 +331,10 @@ function App() {
       </main>
       
       <footer className="py-6 text-center text-gray-500 text-sm font-medium">
-        Made with ❤️ — TypeKaro · typing as {username}
+        <div>Made with ❤️ — TypeKaro · typing as {username}</div>
+        <div className="mt-2 text-xs">
+          developed by <a href="https://www.linkedin.com/in/sudip-seth-491066325/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 font-bold transition-colors">sudip seth</a>
+        </div>
       </footer>
     </div>
   );
